@@ -125,7 +125,7 @@ private:
     void    BuildCards();
     void    UpdateMonitorRect();
     void    UpdateCardGeometry(CardModel& card, float normMonW, float normMonH,
-                               bool selectedRestore = false);
+        bool selectedRestore = false);
     void    OnThumbnailSourceSizeChanged();
     void    UpdateCardThumbnailDest(CardModel& card);
     HRESULT CreateCardVisuals();
@@ -143,7 +143,7 @@ private:
     float   EnterProgress() const;
     void    ReplayEnterAnimation();
     void    ExitView(bool commitScroll = true,
-                     float exitDurationSec = kExitDurationSec);
+        float exitDurationSec = kExitDurationSec);
     void    BeginExitView();
     void    TickSmoothScroll(float dtSeconds);
     void    TickRepeatedRotate();
@@ -188,7 +188,7 @@ private:
     // Input processing
     // ========================================================================
 
-    bool    OnKey(bool down, UINT vkCode);
+    bool    OnKey(bool down, UINT vkCode, LPARAM lParam);
     bool    OnWheel(int wheelDelta);
     bool    OnMouse(LONG x, LONG y, bool pressed);
 
@@ -203,25 +203,25 @@ private:
     // ========================================================================
 
     void    UpdateCamera(float enterProgress);
-    void    UpdateCards(float enterProgress);
+    void    UpdateCards(float enterProgress, float dtSeconds);
     Matrix4x4 BuildCameraMatrix(float enterProgress) const;
     Matrix4x4 BuildViewMatrix(float enterProgress) const;
     Matrix4x4 BuildProjMatrix(float aspect, float enterProgress) const;
     Matrix4x4 BuildModelMatrix(const CardModel& card, float paramT,
-                               float enterProgress, float flatDepthRank) const;
+        float enterProgress, float flatDepthRank) const;
 
     float ComputeCarouselEdgeOpacity(float slot) const;
     float ComputeUpdateAlpha(const CardModel& card, float enterProgress,
-                             float carouselSlot) const;
+        float carouselSlot) const;
     float ComputeRotationDisplaySlot(int listIndex) const;
     float ComputeRotationAlpha(const CardModel& card, float enterProgress,
-                               int listIndex, float carouselSlot) const;
+        int listIndex, float carouselSlot) const;
     bool  ShouldDrawRotationCard(int listIndex) const;
     float ComputeCarouselPathDenom() const;
     float ComputeCarouselBezierT(float slot) const;
 
     float   ComputeFlatDepthRank(float slot, float enterProgress,
-                                 int listIndex) const;
+        int listIndex) const;
     float   ComputePaintKey(float slot, float enterProgress, int listIndex) const;
 
     // Accessibility (uDWM CFlip3DAccessible + NotifyWinEvent)
@@ -233,7 +233,7 @@ private:
     int     AccessibleChildCount() const;
     HRESULT AccessibleWindowName(int index, BSTR* pszName) const;
     bool    AccessibleCardScreenRect(int index, long* pxLeft, long* pyTop,
-                                     long* pcxWidth, long* pcyHeight) const;
+        long* pcxWidth, long* pcyHeight) const;
     int     AccessibleHitTest(long screenX, long screenY) const;
     bool    AccessiblePointInView(POINT screenPt) const;
     HRESULT AccessibleRotateToIndex(int index);
@@ -244,15 +244,15 @@ private:
     // ========================================================================
 
     // ---- Window / instance ----
-    HINSTANCE               m_hInstance     = nullptr;
-    HWND                    m_hwnd          = nullptr;
+    HINSTANCE               m_hInstance = nullptr;
+    HWND                    m_hwnd = nullptr;
     std::wstring            m_initError;
 
     // Per-monitor shell thumbnail + dark wash (client coords = virtual desktop).
     struct MonitorBackdrop
     {
         RECT                        rcMonitor = {};
-        RECT                        rcWork    = {};
+        RECT                        rcWork = {};
         ComPtr<IDCompositionVisual3> washVisual;
         ComPtr<IDCompositionVisual3> shellContainer;
         ComPtr<IDCompositionVisual3> shellThumb;
@@ -260,37 +260,40 @@ private:
     };
 
     // ---- Dimensions ----
-    UINT                    m_width         = 1600;
-    UINT                    m_height        = 900;
-    float                   m_monW          = 1920.0f;
-    float                   m_monH          = 1080.0f;
-    float                   m_monOriginX    = 0.0f;   // primary rcWork.left (screen px)
-    float                   m_monOriginY    = 0.0f;   // primary rcWork.top  (screen px)
-    float                   m_viewX         = 0.0f;   // primary rcWork origin in client px
-    float                   m_viewY         = 0.0f;
+    UINT                    m_width = 1600;
+    UINT                    m_height = 900;
+    float                   m_monW = 1920.0f;
+    float                   m_monH = 1080.0f;
+    float                   m_monOriginX = 0.0f;   // primary rcWork.left (screen px)
+    float                   m_monOriginY = 0.0f;   // primary rcWork.top  (screen px)
+    float                   m_viewX = 0.0f;   // primary rcWork origin in client px
+    float                   m_viewY = 0.0f;
     std::vector<MonitorBackdrop> m_monitorBackdrops;
     ComPtr<IDCompositionSurface> m_washSurface;
-    bool                    m_minimized     = false;
-    bool                    m_rtl           = false;
+    bool                    m_minimized = false;
+    bool                    m_rtl = false;
     bool                    m_thumbnailsDirty = false; // coalesce WM 0x327 bursts
-    UINT                    m_wmShellHook     = 0;
+    UINT                    m_wmShellHook = 0;
     bool                    m_shellHookRegistered = false;
 
     // ---- Frame timing ----
     std::chrono::steady_clock::time_point   m_prevFrame;
+    std::chrono::steady_clock::time_point   m_lastKeyProcessed{};
+    int                                       m_wheelPendingSlots = 0;
+    std::chrono::steady_clock::time_point     m_lastWheelTime{};
 
     // ---- Cards & view state ----
     std::vector<CardModel>  m_cards;
-    ViewState               m_state         = ViewState::Inactive;
+    ViewState               m_state = ViewState::Inactive;
     Timeline                m_animEnter;
 
     // ---- Smooth carousel scroll ----
-    float                   m_scrollPos     = 0.0f;
-    float                   m_scrollTarget  = 0.0f;
+    float                   m_scrollPos = 0.0f;
+    float                   m_scrollTarget = 0.0f;
     float                   m_wrapScrollAdjustThisFrame = 0.0f;
 
     // Frozen browse scroll at exit start; held constant during ExitRepeatedRotate
-    float                   m_exitScrollSnapshot    = 0.0f;
+    float                   m_exitScrollSnapshot = 0.0f;
 
     // ---- Discrete list rotation (uDWM m_ptlRotateListTimeline) ----
     Timeline                m_rotateTimeline;
@@ -300,12 +303,12 @@ private:
 
     // ---- Selection ----
     HWND                    m_originalFrontHwnd = nullptr;
-    HWND                    m_selectedHwnd   = nullptr;
+    HWND                    m_selectedHwnd = nullptr;
     std::vector<HWND>       m_lastPaintOrder;
-    HWND                    m_hitHwnd        = nullptr;
+    HWND                    m_hitHwnd = nullptr;
 
     // ---- Accessibility ----
-    IAccessible*            m_pAccessible    = nullptr;
+    IAccessible* m_pAccessible = nullptr;
     bool                    m_comInitialized = false;
     bool                    m_comNeedsUninit = false;
     // ---- D3D11 device ----
@@ -318,9 +321,9 @@ private:
     ComPtr<IDCompositionVisual3>        m_sceneVisual;
 
     // ---- DWM thumbnail API ----
-    HMODULE                               m_dwmapi        = nullptr;
+    HMODULE                               m_dwmapi = nullptr;
     // Required at startup (LoadThumbApi); always non-null after Initialize succeeds.
     DwmpCreateSharedThumbnailVisual_fn    m_pfnCreateSharedThumbVisual = nullptr;
-    DwmpQueryWindowThumbnailSourceSize_fn m_pfnQueryThumbSize          = nullptr;
-    GetWindowMinimizeRect_fn              m_pfnGetWindowMinimizeRect    = nullptr;
+    DwmpQueryWindowThumbnailSourceSize_fn m_pfnQueryThumbSize = nullptr;
+    GetWindowMinimizeRect_fn              m_pfnGetWindowMinimizeRect = nullptr;
 };

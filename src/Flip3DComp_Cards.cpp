@@ -5,45 +5,45 @@
 
 namespace {
 
-MONITORINFO QueryPrimaryMonitor()
-{
-    MONITORINFO mi = { sizeof(mi) };
-    HMONITOR hPrimary = MonitorFromWindow(nullptr, MONITOR_DEFAULTTOPRIMARY);
-    if (hPrimary)
-        GetMonitorInfoW(hPrimary, &mi);
-    return mi;
-}
-
-// 2D screen anchor for non-minimized-tile layouts (extended frame or restore rect).
-bool FillRestoredScreenRect(HWND h, const MONITORINFO& mi, RECT& out)
-{
-    bool maximized = IsZoomed(h);
-
-    if (IsIconic(h))
+    MONITORINFO QueryPrimaryMonitor()
     {
-        WINDOWPLACEMENT wp = { sizeof(wp) };
-        if (GetWindowPlacement(h, &wp) && !IsRectEmpty(&wp.rcNormalPosition))
+        MONITORINFO mi = { sizeof(mi) };
+        HMONITOR hPrimary = MonitorFromWindow(nullptr, MONITOR_DEFAULTTOPRIMARY);
+        if (hPrimary)
+            GetMonitorInfoW(hPrimary, &mi);
+        return mi;
+    }
+
+    // 2D screen anchor for non-minimized-tile layouts (extended frame or restore rect).
+    bool FillRestoredScreenRect(HWND h, const MONITORINFO& mi, RECT& out)
+    {
+        bool maximized = IsZoomed(h);
+
+        if (IsIconic(h))
         {
-            out = wp.rcNormalPosition;
-            OffsetRect(&out, mi.rcWork.left, mi.rcWork.top);
-            if (wp.flags & WPF_RESTORETOMAXIMIZED)
+            WINDOWPLACEMENT wp = { sizeof(wp) };
+            if (GetWindowPlacement(h, &wp) && !IsRectEmpty(&wp.rcNormalPosition))
             {
-                maximized = true;
-                out = mi.rcWork;
+                out = wp.rcNormalPosition;
+                OffsetRect(&out, mi.rcWork.left, mi.rcWork.top);
+                if (wp.flags & WPF_RESTORETOMAXIMIZED)
+                {
+                    maximized = true;
+                    out = mi.rcWork;
+                }
+                goto leave;
             }
-            goto leave;
         }
-    }
 
-    DwmGetWindowAttribute(h, DWMWA_EXTENDED_FRAME_BOUNDS, &out, sizeof(out));
-leave:
-    if (maximized)
-    {
-        OffsetRect(&out, mi.rcWork.left - out.left, mi.rcWork.top - out.top);
-    }
+        DwmGetWindowAttribute(h, DWMWA_EXTENDED_FRAME_BOUNDS, &out, sizeof(out));
+    leave:
+        if (maximized)
+        {
+            OffsetRect(&out, mi.rcWork.left - out.left, mi.rcWork.top - out.top);
+        }
 
-    return true;
-}
+        return true;
+    }
 
 } // namespace
 
@@ -96,8 +96,8 @@ bool Flip3DCompApp::LoadThumbApi()
 void Flip3DCompApp::UnloadThumbApi()
 {
     m_pfnCreateSharedThumbVisual = nullptr;
-    m_pfnQueryThumbSize          = nullptr;
-    m_pfnGetWindowMinimizeRect     = nullptr;
+    m_pfnQueryThumbSize = nullptr;
+    m_pfnGetWindowMinimizeRect = nullptr;
 
     if (m_dwmapi)
     {
@@ -114,7 +114,7 @@ void Flip3DCompApp::UnloadThumbApi()
 //   - GetMonitorToWorldTransform on primary m_rcMonitor for all cards
 // ============================================================================
 void Flip3DCompApp::UpdateCardGeometry(CardModel& c, float normMonW, float normMonH,
-                                       bool selectedRestore)
+    bool selectedRestore)
 {
     HWND h = c.m_hwnd;
     if (!h)
@@ -123,7 +123,7 @@ void Flip3DCompApp::UpdateCardGeometry(CardModel& c, float normMonW, float normM
     normMonW = std::max(normMonW, 1.0f);
     normMonH = std::max(normMonH, 1.0f);
 
-    c.m_isMinimized    = !!IsIconic(h) && !selectedRestore;
+    c.m_isMinimized = !!IsIconic(h) && !selectedRestore;
     c.m_isShellDesktop = (h == GetShellWindow());
 
     HMONITOR mon = MonitorFromWindow(h, MONITOR_DEFAULTTONEAREST);
@@ -168,7 +168,7 @@ void Flip3DCompApp::UpdateCardGeometry(CardModel& c, float normMonW, float normM
     if (IsRectEmpty(&flatBounds))
         flatBounds = mi.rcWork;
 
-    c.m_srcWidth  = (int)thumbW;
+    c.m_srcWidth = (int)thumbW;
     c.m_srcHeight = (int)thumbH;
 
     // targetSize / occupancy = 3D carousel (uDWM finalSize).
@@ -184,7 +184,7 @@ void Flip3DCompApp::UpdateCardGeometry(CardModel& c, float normMonW, float normM
     float flatH = thumbH;
     if (c.m_isShellDesktop || c.m_isMinimized)
     {
-        flatW = (float)std::max(1L, flatBounds.right  - flatBounds.left);
+        flatW = (float)std::max(1L, flatBounds.right - flatBounds.left);
         flatH = (float)std::max(1L, flatBounds.bottom - flatBounds.top);
     }
 
@@ -206,7 +206,7 @@ void Flip3DCompApp::UpdateCardGeometry(CardModel& c, float normMonW, float normM
         worldX, worldY);
 
     c.m_originalPos = { worldX, worldY, 0.0f };
-    c.m_flatPos     = { worldX, worldY, 0.0f };
+    c.m_flatPos = { worldX, worldY, 0.0f };
 }
 
 // ============================================================================
@@ -228,21 +228,21 @@ void Flip3DCompApp::UpdateMonitorRect()
     const int vx = GetSystemMetrics(SM_XVIRTUALSCREEN);
     const int vy = GetSystemMetrics(SM_YVIRTUALSCREEN);
     m_viewX = (float)(mi.rcWork.left - vx);
-    m_viewY = (float)(mi.rcWork.top  - vy);
+    m_viewY = (float)(mi.rcWork.top - vy);
 
-    const float newMonW     = (float)std::max(1L, mi.rcWork.right  - mi.rcWork.left);
-    const float newMonH     = (float)std::max(1L, mi.rcWork.bottom - mi.rcWork.top);
-    const float newOriginX  = (float)mi.rcWork.left;
-    const float newOriginY  = (float)mi.rcWork.top;
+    const float newMonW = (float)std::max(1L, mi.rcWork.right - mi.rcWork.left);
+    const float newMonH = (float)std::max(1L, mi.rcWork.bottom - mi.rcWork.top);
+    const float newOriginX = (float)mi.rcWork.left;
+    const float newOriginY = (float)mi.rcWork.top;
 
     const bool layoutChanged =
-        newMonW    != m_monW       ||
-        newMonH    != m_monH       ||
+        newMonW != m_monW ||
+        newMonH != m_monH ||
         newOriginX != m_monOriginX ||
         newOriginY != m_monOriginY;
 
-    m_monW       = newMonW;
-    m_monH       = newMonH;
+    m_monW = newMonW;
+    m_monH = newMonH;
     m_monOriginX = newOriginX;
     m_monOriginY = newOriginY;
 
@@ -285,8 +285,8 @@ void Flip3DCompApp::BuildCards()
     auto hwnds = EnumerateWindows();
 
     MONITORINFO primaryMi = QueryPrimaryMonitor();
-    m_monW       = (float)std::max(1L, primaryMi.rcWork.right  - primaryMi.rcWork.left);
-    m_monH       = (float)std::max(1L, primaryMi.rcWork.bottom - primaryMi.rcWork.top);
+    m_monW = (float)std::max(1L, primaryMi.rcWork.right - primaryMi.rcWork.left);
+    m_monH = (float)std::max(1L, primaryMi.rcWork.bottom - primaryMi.rcWork.top);
     m_monOriginX = (float)primaryMi.rcWork.left;
     m_monOriginY = (float)primaryMi.rcWork.top;
 
@@ -294,7 +294,7 @@ void Flip3DCompApp::BuildCards()
     for (auto h : hwnds)
     {
         CardModel c;
-        c.m_hwnd                 = h;
+        c.m_hwnd = h;
         c.m_initialCarouselIndex = carouselIndex++;
         UpdateCardGeometry(c, m_monW, m_monH);
         m_cards.push_back(std::move(c));
@@ -333,10 +333,10 @@ void Flip3DCompApp::UpdateCardThumbnailDest(CardModel& card)
         return;
 
     DWM_THUMBNAIL_PROPERTIES tp = {};
-    tp.dwFlags   = DWM_TNP_VISIBLE | DWM_TNP_RECTDESTINATION
-                    | DWM_TNP_ENABLE3D | DWM_TNP_DISABLEFORCECVI;
-    tp.fVisible  = TRUE;
-    tp.rcDestination   = { 0, 0, card.m_srcWidth, card.m_srcHeight };
+    tp.dwFlags = DWM_TNP_VISIBLE | DWM_TNP_RECTDESTINATION
+        | DWM_TNP_ENABLE3D | DWM_TNP_DISABLEFORCECVI;
+    tp.fVisible = TRUE;
+    tp.rcDestination = { 0, 0, card.m_srcWidth, card.m_srcHeight };
     DwmUpdateThumbnailProperties(card.m_hThumb, &tp);
 }
 

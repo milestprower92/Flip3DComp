@@ -9,33 +9,33 @@
 
 namespace {
 
-constexpr int kAccStringContainer     = 3000;  // uDWM resource 0xBB8
-constexpr int kAccStringDefaultAction = 3001;  // uDWM resource 0xBB9
+    constexpr int kAccStringContainer = 3000;  // uDWM resource 0xBB8
+    constexpr int kAccStringDefaultAction = 3001;  // uDWM resource 0xBB9
 
-// Fallbacks when string resources are absent (standalone exe).
-constexpr wchar_t kFallbackContainerName[]     = L"Flip 3D";
-constexpr wchar_t kFallbackDefaultActionName[] = L"Switch";
+    // Fallbacks when string resources are absent (standalone exe).
+    constexpr wchar_t kFallbackContainerName[] = L"Flip 3D";
+    constexpr wchar_t kFallbackDefaultActionName[] = L"Switch";
 
-HRESULT LoadAccString(int stringId, BSTR* pbstrTarget)
-{
-    if (!pbstrTarget)
-        return E_POINTER;
-
-    *pbstrTarget = nullptr;
-
-    wchar_t buffer[260] = {};
-    if (LoadStringW(GetModuleHandleW(nullptr),
-                    (UINT)stringId, buffer, (int)std::size(buffer)))
+    HRESULT LoadAccString(int stringId, BSTR* pbstrTarget)
     {
-        *pbstrTarget = SysAllocString(buffer);
+        if (!pbstrTarget)
+            return E_POINTER;
+
+        *pbstrTarget = nullptr;
+
+        wchar_t buffer[260] = {};
+        if (LoadStringW(GetModuleHandleW(nullptr),
+            (UINT)stringId, buffer, (int)std::size(buffer)))
+        {
+            *pbstrTarget = SysAllocString(buffer);
+            return *pbstrTarget ? S_OK : E_OUTOFMEMORY;
+        }
+
+        const wchar_t* fallback = (stringId == kAccStringDefaultAction)
+            ? kFallbackDefaultActionName : kFallbackContainerName;
+        *pbstrTarget = SysAllocString(fallback);
         return *pbstrTarget ? S_OK : E_OUTOFMEMORY;
     }
-
-    const wchar_t* fallback = (stringId == kAccStringDefaultAction)
-        ? kFallbackDefaultActionName : kFallbackContainerName;
-    *pbstrTarget = SysAllocString(fallback);
-    return *pbstrTarget ? S_OK : E_OUTOFMEMORY;
-}
 
 } // namespace
 
@@ -92,23 +92,23 @@ STDMETHODIMP Flip3DAccessible::GetTypeInfoCount(UINT* /*pctinfo*/)
 }
 
 STDMETHODIMP Flip3DAccessible::GetTypeInfo(UINT /*iTInfo*/, LCID /*lcid*/,
-                                             ITypeInfo** /*ppTInfo*/)
+    ITypeInfo** /*ppTInfo*/)
 {
     return E_NOTIMPL;
 }
 
 STDMETHODIMP Flip3DAccessible::GetIDsOfNames(REFIID /*riid*/, LPOLESTR* /*rgszNames*/,
-                                             UINT /*cNames*/, LCID /*lcid*/,
-                                             DISPID* /*rgDispId*/)
+    UINT /*cNames*/, LCID /*lcid*/,
+    DISPID* /*rgDispId*/)
 {
     return E_NOTIMPL;
 }
 
 STDMETHODIMP Flip3DAccessible::Invoke(DISPID /*dispIdMember*/, REFIID /*riid*/,
-                                      LCID /*lcid*/, WORD /*wFlags*/,
-                                      DISPPARAMS* /*pDispParams*/,
-                                      VARIANT* /*pVarResult*/,
-                                      EXCEPINFO* /*pExcepInfo*/, UINT* /*puArgErr*/)
+    LCID /*lcid*/, WORD /*wFlags*/,
+    DISPPARAMS* /*pDispParams*/,
+    VARIANT* /*pVarResult*/,
+    EXCEPINFO* /*pExcepInfo*/, UINT* /*puArgErr*/)
 {
     return E_NOTIMPL;
 }
@@ -121,7 +121,7 @@ int Flip3DAccessible::GetChildrenCount() const
 void Flip3DAccessible::SetChildIndex(int index, VARIANT* pvarPlace) const
 {
     VariantInit(pvarPlace);
-    pvarPlace->vt   = VT_I4;
+    pvarPlace->vt = VT_I4;
     pvarPlace->lVal = index;
 }
 
@@ -146,7 +146,7 @@ STDMETHODIMP Flip3DAccessible::get_accChildCount(long* pChildCount)
 }
 
 STDMETHODIMP Flip3DAccessible::get_accChild(VARIANT varChild,
-                                            IDispatch** ppdispChild)
+    IDispatch** ppdispChild)
 {
     if (varChild.vt == VT_EMPTY)
         return E_INVALIDARG;
@@ -185,7 +185,7 @@ STDMETHODIMP Flip3DAccessible::get_accValue(VARIANT /*varChild*/, BSTR* /*pszVal
 }
 
 STDMETHODIMP Flip3DAccessible::get_accDescription(VARIANT /*varChild*/,
-                                                    BSTR* pszDescription)
+    BSTR* pszDescription)
 {
     if (!pszDescription)
         return E_POINTER;
@@ -203,7 +203,7 @@ STDMETHODIMP Flip3DAccessible::get_accRole(VARIANT varChild, VARIANT* pvarRole)
         return E_INVALIDARG;
 
     VariantInit(pvarRole);
-    pvarRole->vt   = VT_I4;
+    pvarRole->vt = VT_I4;
     pvarRole->lVal = (varChild.lVal == CHILDID_SELF)
         ? ROLE_SYSTEM_CLIENT
         : ROLE_SYSTEM_WINDOW;
@@ -233,7 +233,7 @@ STDMETHODIMP Flip3DAccessible::get_accState(VARIANT varChild, VARIANT* pvarState
     }
 
     VariantInit(pvarState);
-    pvarState->vt   = VT_I4;
+    pvarState->vt = VT_I4;
     pvarState->lVal = (LONG)state;
     return S_OK;
 }
@@ -244,18 +244,18 @@ STDMETHODIMP Flip3DAccessible::get_accHelp(VARIANT /*varChild*/, BSTR* /*pszHelp
 }
 
 STDMETHODIMP Flip3DAccessible::get_accHelpTopic(BSTR* pszHelpFile, VARIANT /*varChild*/,
-                                                long* pidTopic)
+    long* pidTopic)
 {
     if (!pszHelpFile || !pidTopic)
         return E_POINTER;
 
     *pszHelpFile = nullptr;
-    *pidTopic    = 0;
+    *pidTopic = 0;
     return S_FALSE;
 }
 
 STDMETHODIMP Flip3DAccessible::get_accKeyboardShortcut(VARIANT /*varChild*/,
-                                                       BSTR* /*pszKeyboardShortcut*/)
+    BSTR* /*pszKeyboardShortcut*/)
 {
     return E_NOTIMPL;
 }
@@ -283,7 +283,7 @@ STDMETHODIMP Flip3DAccessible::get_accSelection(VARIANT* pvarSelectedChildren)
 }
 
 STDMETHODIMP Flip3DAccessible::get_accDefaultAction(VARIANT /*varChild*/,
-                                                    BSTR* pszDefaultAction)
+    BSTR* pszDefaultAction)
 {
     if (!pszDefaultAction)
         return E_POINTER;
@@ -307,7 +307,7 @@ STDMETHODIMP Flip3DAccessible::accSelect(long flagsSelect, VARIANT varChild)
 }
 
 STDMETHODIMP Flip3DAccessible::accLocation(long* pxLeft, long* pyTop, long* pcxWidth,
-                                           long* pcyHeight, VARIANT varChild)
+    long* pcyHeight, VARIANT varChild)
 {
     if (!pxLeft || !pyTop || !pcxWidth || !pcyHeight || varChild.vt != VT_I4)
         return E_INVALIDARG;
@@ -321,9 +321,9 @@ STDMETHODIMP Flip3DAccessible::accLocation(long* pxLeft, long* pyTop, long* pcxW
         if (!GetWindowRect(m_app->WindowHandle(), &rc))
             return E_INVALIDARG;
 
-        *pxLeft   = rc.left;
-        *pyTop    = rc.top;
-        *pcxWidth  = std::max(0L, rc.right - rc.left);
+        *pxLeft = rc.left;
+        *pyTop = rc.top;
+        *pcxWidth = std::max(0L, rc.right - rc.left);
         *pcyHeight = std::max(0L, rc.bottom - rc.top);
         return S_OK;
     }
@@ -339,7 +339,7 @@ STDMETHODIMP Flip3DAccessible::accLocation(long* pxLeft, long* pyTop, long* pcxW
 }
 
 STDMETHODIMP Flip3DAccessible::accNavigate(long navDir, VARIANT varStart,
-                                           VARIANT* pvarEndUpAt)
+    VARIANT* pvarEndUpAt)
 {
     if (!pvarEndUpAt)
         return E_POINTER;
@@ -348,7 +348,7 @@ STDMETHODIMP Flip3DAccessible::accNavigate(long navDir, VARIANT varStart,
         return E_INVALIDARG;
 
     const int childCount = GetChildrenCount();
-    HRESULT hr           = DISP_E_MEMBERNOTFOUND;
+    HRESULT hr = DISP_E_MEMBERNOTFOUND;
 
     if (varStart.lVal == CHILDID_SELF)
     {
@@ -369,7 +369,7 @@ STDMETHODIMP Flip3DAccessible::accNavigate(long navDir, VARIANT varStart,
     }
     else if (varStart.lVal > 0 && varStart.lVal <= childCount)
     {
-        int current  = varStart.lVal;
+        int current = varStart.lVal;
         int newIndex = current;
 
         switch (navDir)
@@ -400,7 +400,7 @@ STDMETHODIMP Flip3DAccessible::accNavigate(long navDir, VARIANT varStart,
 }
 
 STDMETHODIMP Flip3DAccessible::accHitTest(long xLeft, long yTop,
-                                          VARIANT* pvarChildAtPoint)
+    VARIANT* pvarChildAtPoint)
 {
     if (!pvarChildAtPoint || !m_app)
         return E_POINTER;

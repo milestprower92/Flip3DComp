@@ -56,7 +56,7 @@ bool Flip3DCompApp::Initialize(HINSTANCE hInstance)
             m_initError = L"Failed to create the shell desktop backdrop.";
         return false;
     }
-    
+
     m_state = ViewState::Enter;
     m_animEnter.Restart(0.0f, 1.0f, kEnterExitDurationSec);
     m_prevFrame = std::chrono::steady_clock::now();
@@ -110,7 +110,7 @@ int Flip3DCompApp::Run()
 // Flip3DCompApp::WndProc — static window procedure
 // ============================================================================
 LRESULT CALLBACK Flip3DCompApp::WndProc(HWND hwnd, UINT msg,
-                                         WPARAM wParam, LPARAM lParam)
+    WPARAM wParam, LPARAM lParam)
 {
     if (msg == WM_NCCREATE)
     {
@@ -142,8 +142,8 @@ LRESULT Flip3DCompApp::HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
             return 0;
         }
         m_minimized = false;
-        m_width     = std::max(1u, (UINT)LOWORD(lParam));
-        m_height    = std::max(1u, (UINT)HIWORD(lParam));
+        m_width = std::max(1u, (UINT)LOWORD(lParam));
+        m_height = std::max(1u, (UINT)HIWORD(lParam));
         UpdateMonitorRect();
         return 0;
 
@@ -171,11 +171,11 @@ LRESULT Flip3DCompApp::HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
 
     case WM_LBUTTONDOWN:
         OnMouse((LONG)(short)LOWORD(lParam),
-                (LONG)(short)HIWORD(lParam), true);
+            (LONG)(short)HIWORD(lParam), true);
         return 0;
 
     case WM_KEYDOWN:
-        if (OnKey(true, (UINT)wParam))
+        if (OnKey(true, (UINT)wParam, lParam))
             return 0;
         break;
 
