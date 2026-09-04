@@ -10,6 +10,10 @@ DirectComposition Flip3D switcher. A faster, more complete successor to the [fli
 - CMake 3.21+
 - Visual Studio / MSVC with the Windows SDK
 
+## Demo
+
+<img width="800" height="439" alt="Win10 Flip3DComp test" src="https://github.com/user-attachments/assets/7f414433-018c-4df0-866e-0defad08a631" />
+
 ## Build
 
 ```powershell
