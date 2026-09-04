@@ -26,8 +26,8 @@ bool Flip3DCompApp::InitAccessibility()
     if (FAILED(hr))
         return false;
 
-    m_comInitialized = true;
-    m_comNeedsUninit = true;
+    m_comInitialized    = true;
+    m_comNeedsUninit    = true;
     return true;
 }
 
@@ -112,7 +112,7 @@ HRESULT Flip3DCompApp::AccessibleWindowName(int index, BSTR* pszName) const
 // Project the live 3D card quad to screen pixels (uDWM GetFlip3DWindowBoundingBox).
 // ============================================================================
 bool Flip3DCompApp::AccessibleCardScreenRect(int index, long* pxLeft, long* pyTop,
-    long* pcxWidth, long* pcyHeight) const
+                                             long* pcxWidth, long* pcyHeight) const
 {
     if (!pxLeft || !pyTop || !pcxWidth || !pcyHeight
         || index < 0 || index >= (int)m_cards.size())
@@ -120,27 +120,27 @@ bool Flip3DCompApp::AccessibleCardScreenRect(int index, long* pxLeft, long* pyTo
 
     const CardModel& c = m_cards[(size_t)index];
 
-    const float p = EnterProgress();
-    const auto  camera = BuildCameraMatrix(p);
+    const float p         = EnterProgress();
+    const auto  camera    = BuildCameraMatrix(p);
     const float carouselSlot = GetCardDisplaySlot(index);
 
-    const float t = ComputeCarouselBezierT(carouselSlot);
+    const float t        = ComputeCarouselBezierT(carouselSlot);
     const float flatRank = ComputeFlatDepthRank(carouselSlot, p, index);
-    const auto  model = BuildModelMatrix(c, t, p, flatRank);
-    const auto  mvp = Math::Multiply(model, camera);
+    const auto  model    = BuildModelMatrix(c, t, p, flatRank);
+    const auto  mvp      = Math::Multiply(model, camera);
 
-    const float sw = (float)std::max(c.m_srcWidth, 1);
+    const float sw = (float)std::max(c.m_srcWidth,  1);
     const float sh = (float)std::max(c.m_srcHeight, 1);
 
     auto project = [&](float px, float py) -> Vec2
-        {
-            const float x = px * mvp.m[0][0] + py * mvp.m[1][0] + mvp.m[3][0];
-            const float y = px * mvp.m[0][1] + py * mvp.m[1][1] + mvp.m[3][1];
-            float       w = px * mvp.m[0][3] + py * mvp.m[1][3] + mvp.m[3][3];
-            if (std::fabs(w) < 1e-6f)
-                w = 1e-6f;
-            return { x / w, y / w };
-        };
+    {
+        const float x = px * mvp.m[0][0] + py * mvp.m[1][0] + mvp.m[3][0];
+        const float y = px * mvp.m[0][1] + py * mvp.m[1][1] + mvp.m[3][1];
+        float       w = px * mvp.m[0][3] + py * mvp.m[1][3] + mvp.m[3][3];
+        if (std::fabs(w) < 1e-6f)
+            w = 1e-6f;
+        return { x / w, y / w };
+    };
 
     const Vec2 corners[4] = {
         project(0.0f, 0.0f),
@@ -149,7 +149,7 @@ bool Flip3DCompApp::AccessibleCardScreenRect(int index, long* pxLeft, long* pyTo
         project(0.0f,  sh),
     };
 
-    float minX = 1e10f, minY = 1e10f;
+    float minX =  1e10f, minY =  1e10f;
     float maxX = -1e10f, maxY = -1e10f;
     for (const Vec2& v : corners)
     {
@@ -162,11 +162,11 @@ bool Flip3DCompApp::AccessibleCardScreenRect(int index, long* pxLeft, long* pyTo
     POINT origin = { 0, 0 };
     ClientToScreen(m_hwnd, &origin);
 
-    *pxLeft = origin.x + (long)std::floor(minX);
-    *pyTop = origin.y + (long)std::floor(minY);
-    *pcxWidth = (long)std::ceil(maxX - minX);
+    *pxLeft   = origin.x + (long)std::floor(minX);
+    *pyTop    = origin.y + (long)std::floor(minY);
+    *pcxWidth  = (long)std::ceil(maxX - minX);
     *pcyHeight = (long)std::ceil(maxY - minY);
-    if (*pcxWidth < 0)  *pcxWidth = 0;
+    if (*pcxWidth < 0)  *pcxWidth  = 0;
     if (*pcyHeight < 0) *pcyHeight = 0;
     return true;
 }

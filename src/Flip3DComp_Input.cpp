@@ -30,8 +30,19 @@ bool Flip3DCompApp::OnWheel(int wheelDelta)
 // ============================================================================
 bool Flip3DCompApp::OnKey(bool down, UINT vkCode, LPARAM lParam)
 {
-    if (!down ||
-        m_state == ViewState::Exit ||
+    if (!down)
+    {
+        if (vkCode == m_heldNavigationKey)
+        {
+            m_heldNavigationKey = 0;
+            m_heldNavigationDirection = 0;
+            m_heldNavigationStart = {};
+            m_scrollTarget = std::round(m_scrollTarget);
+        }
+        return false;
+    }
+
+    if (m_state == ViewState::Exit ||
         m_state == ViewState::ExitRepeatedRotate)
         return false;
 
@@ -40,17 +51,7 @@ bool Flip3DCompApp::OnKey(bool down, UINT vkCode, LPARAM lParam)
     // arrow or tab key doesn't rotate the carousel too quickly.
     const bool isRepeat = (lParam & (1 << 30)) != 0;
     if (isRepeat)
-    {
-        const auto now = std::chrono::steady_clock::now();
-        const float since = std::chrono::duration<float>(now - m_lastKeyProcessed).count();
-        if (since < kKeyRepeatIntervalSec)
-            return true; // eat the repeat without acting
-        m_lastKeyProcessed = now;
-    }
-    else
-    {
-        m_lastKeyProcessed = std::chrono::steady_clock::now();
-    }
+        return true; // held navigation is driven from the frame update
 
     switch (vkCode)
     {
@@ -59,22 +60,40 @@ bool Flip3DCompApp::OnKey(bool down, UINT vkCode, LPARAM lParam)
         return true;
 
     case VK_TAB:
-        RotateBy((GetAsyncKeyState(VK_SHIFT) & 0x8000) ? -1 : 1);
+    {
+        const int direction = (GetAsyncKeyState(VK_SHIFT) & 0x8000) ? -1 : 1;
+        m_heldNavigationKey = vkCode;
+        m_heldNavigationDirection = direction;
+        m_heldNavigationStart = std::chrono::steady_clock::now();
+        RotateBy(direction);
         return true;
+    }
 
     case VK_UP:
+        m_heldNavigationKey = vkCode;
+        m_heldNavigationDirection = -1;
+        m_heldNavigationStart = std::chrono::steady_clock::now();
         RotateBy(-1);
         return true;
 
     case VK_DOWN:
+        m_heldNavigationKey = vkCode;
+        m_heldNavigationDirection = 1;
+        m_heldNavigationStart = std::chrono::steady_clock::now();
         RotateBy(1);
         return true;
 
     case VK_LEFT:
+        m_heldNavigationKey = vkCode;
+        m_heldNavigationDirection = m_rtl ? 1 : -1;
+        m_heldNavigationStart = std::chrono::steady_clock::now();
         RotateBy(m_rtl ? 1 : -1);
         return true;
 
     case VK_RIGHT:
+        m_heldNavigationKey = vkCode;
+        m_heldNavigationDirection = m_rtl ? -1 : 1;
+        m_heldNavigationStart = std::chrono::steady_clock::now();
         RotateBy(m_rtl ? -1 : 1);
         return true;
 

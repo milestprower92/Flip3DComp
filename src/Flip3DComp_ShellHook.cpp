@@ -1,4 +1,4 @@
-// ============================================================================
+        // ============================================================================
 // Flip3DComp_ShellHook.cpp — dynamic card list via RegisterShellHookWindow
 // ============================================================================
 #include "Flip3DComp.h"
@@ -19,7 +19,7 @@ bool Flip3DCompApp::QualifiesForView(HWND hwnd) const
     if (m_selectedHwnd && hwnd == m_selectedHwnd)
         return true;
 
-    const LONG_PTR style = GetWindowLongPtrW(hwnd, GWL_STYLE);
+    const LONG_PTR style   = GetWindowLongPtrW(hwnd, GWL_STYLE);
     const LONG_PTR exStyle = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
 
     if ((style & WS_CHILD) != 0)
@@ -142,7 +142,7 @@ void Flip3DCompApp::OnWindowShowHide(HWND hwnd)
         return;
 
     const bool qualifies = QualifiesForView(hwnd);
-    const int  cardIdx = FindCardIndex(hwnd);
+    const int  cardIdx   = FindCardIndex(hwnd);
 
     if (qualifies)
     {
@@ -176,9 +176,9 @@ HRESULT Flip3DCompApp::CreateCardVisual(CardModel& card)
         return E_INVALIDARG;
 
     DWM_THUMBNAIL_PROPERTIES tp = {};
-    tp.dwFlags = DWM_TNP_VISIBLE | DWM_TNP_RECTDESTINATION
-        | DWM_TNP_ENABLE3D | DWM_TNP_DISABLEFORCECVI;
-    tp.fVisible = TRUE;
+    tp.dwFlags   = DWM_TNP_VISIBLE | DWM_TNP_RECTDESTINATION
+                 | DWM_TNP_ENABLE3D | DWM_TNP_DISABLEFORCECVI;
+    tp.fVisible  = TRUE;
     tp.rcDestination = { 0, 0, card.m_srcWidth, card.m_srcHeight };
 
     void* pv = nullptr;
@@ -227,7 +227,7 @@ bool Flip3DCompApp::AddCardForWindow(HWND hwnd)
         return false;
 
     CardModel card;
-    card.m_hwnd = hwnd;
+    card.m_hwnd                 = hwnd;
     card.m_initialCarouselIndex = (int)m_cards.size();
     UpdateCardGeometry(card, m_monW, m_monH);
 

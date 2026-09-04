@@ -8,70 +8,70 @@
 
 namespace {
 
-    struct EnumMonitorsContext
-    {
-        std::vector<MONITORINFO> monitors;
-    };
+struct EnumMonitorsContext
+{
+    std::vector<MONITORINFO> monitors;
+};
 
-    BOOL CALLBACK EnumMonitorsProc(HMONITOR hMon, HDC, LPRECT, LPARAM lParam)
-    {
-        auto* ctx = reinterpret_cast<EnumMonitorsContext*>(lParam);
-        MONITORINFO mi = { sizeof(mi) };
-        if (GetMonitorInfoW(hMon, &mi))
-            ctx->monitors.push_back(mi);
-        return TRUE;
-    }
+BOOL CALLBACK EnumMonitorsProc(HMONITOR hMon, HDC, LPRECT, LPARAM lParam)
+{
+    auto* ctx = reinterpret_cast<EnumMonitorsContext*>(lParam);
+    MONITORINFO mi = { sizeof(mi) };
+    if (GetMonitorInfoW(hMon, &mi))
+        ctx->monitors.push_back(mi);
+    return TRUE;
+}
 
-    std::vector<MONITORINFO> EnumerateMonitors()
-    {
-        EnumMonitorsContext ctx;
-        EnumDisplayMonitors(nullptr, nullptr, EnumMonitorsProc, (LPARAM)&ctx);
-        return ctx.monitors;
-    }
+std::vector<MONITORINFO> EnumerateMonitors()
+{
+    EnumMonitorsContext ctx;
+    EnumDisplayMonitors(nullptr, nullptr, EnumMonitorsProc, (LPARAM)&ctx);
+    return ctx.monitors;
+}
 
 } // namespace
 
 namespace {
 
-    HRESULT CreateSharedWashSurface(ID3D11Device* d3d,
-        IDCompositionDesktopDevice* dcomp,
-        ComPtr<IDCompositionSurface>& outSurface)
+HRESULT CreateSharedWashSurface(ID3D11Device* d3d,
+                                IDCompositionDesktopDevice* dcomp,
+                                ComPtr<IDCompositionSurface>& outSurface)
+{
+    if (!d3d || !dcomp)
+        return E_INVALIDARG;
+
+    ComPtr<IDCompositionSurfaceFactory> sf;
+    HRESULT hr = dcomp->CreateSurfaceFactory(d3d, &sf);
+    if (FAILED(hr))
+        return hr;
+
+    ComPtr<IDCompositionSurface> bg;
+    hr = sf->CreateSurface(1, 1, DXGI_FORMAT_B8G8R8A8_UNORM,
+                           DXGI_ALPHA_MODE_IGNORE, &bg);
+    if (FAILED(hr))
+        return hr;
+
+    ComPtr<IDXGISurface> dxgiSurf;
+    POINT offset = {};
+    hr = bg->BeginDraw(nullptr, IID_PPV_ARGS(&dxgiSurf), &offset);
+    if (SUCCEEDED(hr))
     {
-        if (!d3d || !dcomp)
-            return E_INVALIDARG;
-
-        ComPtr<IDCompositionSurfaceFactory> sf;
-        HRESULT hr = dcomp->CreateSurfaceFactory(d3d, &sf);
-        if (FAILED(hr))
-            return hr;
-
-        ComPtr<IDCompositionSurface> bg;
-        hr = sf->CreateSurface(1, 1, DXGI_FORMAT_B8G8R8A8_UNORM,
-            DXGI_ALPHA_MODE_IGNORE, &bg);
-        if (FAILED(hr))
-            return hr;
-
-        ComPtr<IDXGISurface> dxgiSurf;
-        POINT offset = {};
-        hr = bg->BeginDraw(nullptr, IID_PPV_ARGS(&dxgiSurf), &offset);
-        if (SUCCEEDED(hr))
+        ComPtr<ID3D11Texture2D> tex;
+        ComPtr<ID3D11RenderTargetView> rtv;
+        if (SUCCEEDED(dxgiSurf.As(&tex)) &&
+            SUCCEEDED(d3d->CreateRenderTargetView(tex.Get(), nullptr, &rtv)))
         {
-            ComPtr<ID3D11Texture2D> tex;
-            ComPtr<ID3D11RenderTargetView> rtv;
-            if (SUCCEEDED(dxgiSurf.As(&tex)) &&
-                SUCCEEDED(d3d->CreateRenderTargetView(tex.Get(), nullptr, &rtv)))
-            {
-                ComPtr<ID3D11DeviceContext> ctx;
-                d3d->GetImmediateContext(&ctx);
-                const float wash[4] = { 0.04f, 0.05f, 0.08f, 1.0f };
-                ctx->ClearRenderTargetView(rtv.Get(), wash);
-            }
-            bg->EndDraw();
+            ComPtr<ID3D11DeviceContext> ctx;
+            d3d->GetImmediateContext(&ctx);
+            const float wash[4] = { 0.04f, 0.05f, 0.08f, 1.0f };
+            ctx->ClearRenderTargetView(rtv.Get(), wash);
         }
-
-        outSurface = std::move(bg);
-        return outSurface ? S_OK : E_FAIL;
+        bg->EndDraw();
     }
+
+    outSurface = std::move(bg);
+    return outSurface ? S_OK : E_FAIL;
+}
 
 } // namespace
 
@@ -171,7 +171,7 @@ void Flip3DCompApp::UpdateBackdropLayout()
         const LONG washW = mon.rcMonitor.right - mon.rcMonitor.left;
         const LONG washH = mon.rcMonitor.bottom - mon.rcMonitor.top;
         const float washX = (float)(mon.rcMonitor.left - vx);
-        const float washY = (float)(mon.rcMonitor.top - vy);
+        const float washY = (float)(mon.rcMonitor.top  - vy);
 
         if (mon.washVisual)
         {
@@ -190,7 +190,7 @@ void Flip3DCompApp::UpdateBackdropLayout()
         const LONG shellW = mon.rcWork.right - mon.rcWork.left;
         const LONG shellH = mon.rcWork.bottom - mon.rcWork.top;
         const float shellX = (float)(mon.rcWork.left - vx);
-        const float shellY = (float)(mon.rcWork.top - vy);
+        const float shellY = (float)(mon.rcWork.top  - vy);
 
         if (mon.shellContainer)
         {
@@ -212,11 +212,11 @@ void Flip3DCompApp::UpdateBackdropLayout()
             OffsetRect(&rcSource, -shellWnd.left, -shellWnd.top);
 
             DWM_THUMBNAIL_PROPERTIES tp = {};
-            tp.dwFlags = DWM_TNP_VISIBLE | DWM_TNP_RECTDESTINATION | DWM_TNP_RECTSOURCE
-                | DWM_TNP_DISABLEFORCECVI;
-            tp.fVisible = TRUE;
-            tp.rcSource = rcSource;
-            tp.rcDestination = { 0, 0, shellW, shellH };
+            tp.dwFlags   = DWM_TNP_VISIBLE | DWM_TNP_RECTDESTINATION | DWM_TNP_RECTSOURCE
+                         | DWM_TNP_DISABLEFORCECVI;
+            tp.fVisible  = TRUE;
+            tp.rcSource       = rcSource;
+            tp.rcDestination  = { 0, 0, shellW, shellH };
             DwmUpdateThumbnailProperties(mon.hShellThumb, &tp);
         }
     }
@@ -241,14 +241,14 @@ bool Flip3DCompApp::RebuildMonitorBackdropsIfNeeded()
         {
             const MONITORINFO& a = monitors[i];
             const MonitorBackdrop& b = m_monitorBackdrops[i];
-            if (a.rcMonitor.left != b.rcMonitor.left
-                || a.rcMonitor.top != b.rcMonitor.top
-                || a.rcMonitor.right != b.rcMonitor.right
-                || a.rcMonitor.bottom != b.rcMonitor.bottom
-                || a.rcWork.left != b.rcWork.left
-                || a.rcWork.top != b.rcWork.top
-                || a.rcWork.right != b.rcWork.right
-                || a.rcWork.bottom != b.rcWork.bottom)
+            if (a.rcMonitor.left   != b.rcMonitor.left
+             || a.rcMonitor.top    != b.rcMonitor.top
+             || a.rcMonitor.right  != b.rcMonitor.right
+             || a.rcMonitor.bottom != b.rcMonitor.bottom
+             || a.rcWork.left      != b.rcWork.left
+             || a.rcWork.top       != b.rcWork.top
+             || a.rcWork.right     != b.rcWork.right
+             || a.rcWork.bottom    != b.rcWork.bottom)
             {
                 layoutSame = false;
                 break;
@@ -282,7 +282,7 @@ bool Flip3DCompApp::RebuildMonitorBackdropsIfNeeded()
     {
         MonitorBackdrop mon = {};
         mon.rcMonitor = mi.rcMonitor;
-        mon.rcWork = mi.rcWork;
+        mon.rcWork    = mi.rcWork;
 
         const LONG shellW = mon.rcWork.right - mon.rcWork.left;
         const LONG shellH = mon.rcWork.bottom - mon.rcWork.top;
@@ -293,10 +293,10 @@ bool Flip3DCompApp::RebuildMonitorBackdropsIfNeeded()
         OffsetRect(&rcSource, -shellWnd.left, -shellWnd.top);
 
         DWM_THUMBNAIL_PROPERTIES tp = {};
-        tp.dwFlags = DWM_TNP_VISIBLE | DWM_TNP_RECTDESTINATION | DWM_TNP_RECTSOURCE
-            | DWM_TNP_DISABLEFORCECVI;
-        tp.fVisible = TRUE;
-        tp.rcSource = rcSource;
+        tp.dwFlags   = DWM_TNP_VISIBLE | DWM_TNP_RECTDESTINATION | DWM_TNP_RECTSOURCE
+                     | DWM_TNP_DISABLEFORCECVI;
+        tp.fVisible  = TRUE;
+        tp.rcSource      = rcSource;
         tp.rcDestination = mon.rcWork;
 
         void* pv = nullptr;
