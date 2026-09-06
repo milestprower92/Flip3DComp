@@ -20,6 +20,10 @@ add_executable(Flip3DComp WIN32
     src/Timeline.cpp
 )
 
+set_target_properties(Flip3DComp PROPERTIES
+    OUTPUT_NAME "Flip3D"
+)
+
 target_include_directories(Flip3DComp PRIVATE src)
 target_link_libraries(Flip3DComp
     dwmapi
