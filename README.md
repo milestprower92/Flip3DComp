@@ -1,12 +1,18 @@
 # Flip3DComp
+Original version by: [ALTaleX531](https://github.com/ALTaleX531)
+
 
 DirectComposition Flip3D switcher. A faster, more complete successor to the [flip3d](https://github.com/ALTaleX531/flip3d) D3D11 prototype.
 
 ## Requirements
 
-- Windows with DWM and DirectComposition
+- a Windows version compatible with DWM and DirectComposition
 - CMake 3.21+
 - Visual Studio / MSVC with the Windows SDK
+
+## Demo
+
+<img width="800" height="439" alt="Win10 Flip3DComp test" src="https://github.com/user-attachments/assets/7f414433-018c-4df0-866e-0defad08a631" />
 
 ## Build
 
@@ -17,7 +23,7 @@ cmake --build build --config Release
 
 ## Run
 
-Launch `build/Release/Flip3DComp.exe`.
+Launch `build/Release/Flip3D.exe`.
 
 Eligible windows are shown as DWM shared thumbnails on a DirectComposition 3D carousel. No D3D11 scene pass, no Windows.Graphics.Capture.
 
