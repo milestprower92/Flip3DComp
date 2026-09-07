@@ -12,7 +12,28 @@
 
 #include <algorithm>
 #include <cmath>
+#include <winreg.h>
 #include <vector>
+
+namespace
+{
+bool IsDwmShiftAnimationSlowdownActive()
+{
+    DWORD enabled = 0;
+    DWORD size = sizeof(enabled);
+    const LSTATUS status = RegGetValueW(
+        HKEY_CURRENT_USER,
+        L"Software\\Microsoft\\Windows\\DWM",
+        L"AnimationsShiftKey",
+        RRF_RT_REG_DWORD,
+        nullptr,
+        &enabled,
+        &size);
+
+    return status == ERROR_SUCCESS && enabled != 0
+        && (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+}
+} // This makes Flip3D compatible with the dwm slow animations DWORD Value like it was on Vista/7
 
 // ============================================================================
 // Flip3DCompApp::EnterProgress
@@ -675,7 +696,10 @@ void Flip3DCompApp::Update(float dtSeconds)
     if (m_thumbnailsDirty)
         OnThumbnailSourceSizeChanged();
 
-    dtSeconds *= std::max(kAnimationRate, 0.0f);
+    float animationRate = std::max(kAnimationRate, 0.0f);
+    if (IsDwmShiftAnimationSlowdownActive())
+        animationRate *= kShiftAnimationRate;
+    dtSeconds *= animationRate;
 
     m_animEnter.Update(dtSeconds);
 

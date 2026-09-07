@@ -43,6 +43,7 @@ constexpr float  kTimelineBezierY2 = 1.0f;
 
 constexpr float  kScrollSmoothTimeSec      = 0.15f;    // smooth-scroll ease time constant
 constexpr float  kAnimationRate            = 1.0f;     // animation speed multiplier (1 = normal)
+constexpr float  kShiftAnimationRate       = 0.1f;     // Windows/DWM Shift slowdown (10x slower)
 constexpr float  kScrollSettleEpsilon      = 0.002f;   // scrollPos≈scrollTarget threshold (browse
 constexpr float  kFrontCardExitSlot        = -0.5f;    // front card slot when exiting (fade-out)
 constexpr float  kFrontCardFadeSpeed       = 0.0f;     // front card fade speed (0 = instant, 1 = linear)
