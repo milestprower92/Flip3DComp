@@ -3,6 +3,8 @@
 // ============================================================================
 #include "Flip3DComp.h"
 
+#include <cmath>
+
 namespace {
 
 MONITORINFO QueryPrimaryMonitor()
@@ -168,8 +170,8 @@ void Flip3DCompApp::UpdateCardGeometry(CardModel& c, float normMonW, float normM
     if (IsRectEmpty(&flatBounds))
         flatBounds = mi.rcWork;
 
-    c.m_srcWidth  = (int)thumbW;
-    c.m_srcHeight = (int)thumbH;
+    c.m_nativeSrcWidth  = (int)thumbW;
+    c.m_nativeSrcHeight = (int)thumbH;
 
     // targetSize / occupancy = 3D carousel (uDWM finalSize).
     Math::WorldSizesFromThumbPixels(
@@ -177,6 +179,10 @@ void Flip3DCompApp::UpdateCardGeometry(CardModel& c, float normMonW, float normM
         c.m_flatSize, c.m_targetSize, c.m_occupancy);
 
     c.m_aspectRatio = thumbW / thumbH;
+
+    const float qualityScale = CardThumbnailQualityScale();
+    c.m_srcWidth = std::max(1, (int)std::lround(thumbW * qualityScale));
+    c.m_srcHeight = std::max(1, (int)std::lround(thumbH * qualityScale));
 
     // 2D flat: position from flatBounds; size from QueryThumbSize (restored pixels).
     // Exceptions: shell uses rcWork; iconic minimize uses taskbar tile dimensions.
@@ -363,7 +369,7 @@ void Flip3DCompApp::OnThumbnailSourceSizeChanged()
 
         const int queryW = (int)std::max(0L, querySize.cx);
         const int queryH = (int)std::max(0L, querySize.cy);
-        if (queryW == card.m_srcWidth && queryH == card.m_srcHeight)
+        if (queryW == card.m_nativeSrcWidth && queryH == card.m_nativeSrcHeight)
             continue;
 
         const bool selectedRestore = card.m_hwnd == m_selectedHwnd;

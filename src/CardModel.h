@@ -40,6 +40,8 @@ struct CardModel
     // ---- Source content ----
     float               m_aspectRatio  = 16.0f / 10.0f;
     float               m_occupancy    = 0.7f;       // normalized occupancy factor
+    int                 m_nativeSrcWidth  = 400;     // queried DWM source width (pixels)
+    int                 m_nativeSrcHeight = 300;     // queried DWM source height (pixels)
     int                 m_srcWidth     = 400;        // thumbnail source width (pixels)
     int                 m_srcHeight    = 300;        // thumbnail source height (pixels)
     bool                m_isMinimized  = false;      // window is iconic
