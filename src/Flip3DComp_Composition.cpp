@@ -77,7 +77,7 @@ BOOL CALLBACK FindTaskbarProc(HWND hwnd, LPARAM lParam)
     if (!GetClassNameW(hwnd, className, ARRAYSIZE(className)))
         return TRUE;
 
-    const bool isTaskbar = !_wcsicmp(className, L"Shell_TrayWnd")   
+    const bool isTaskbar = !_wcsicmp(className, L"Shell_TrayWnd")       
                         || !_wcsicmp(className, L"Shell_SecondaryTrayWnd");
     if (isTaskbar && MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST) == ctx->monitor)
     {
@@ -209,9 +209,10 @@ HRESULT CreateWallpaperSurface(ID3D11Device* d3d,
 
 namespace {
 
-HRESULT CreateSharedWashSurface(ID3D11Device* d3d,
-                                IDCompositionDesktopDevice* dcomp,
-                                ComPtr<IDCompositionSurface>& outSurface)
+HRESULT CreateSolidSurface(ID3D11Device* d3d,
+                           IDCompositionDesktopDevice* dcomp,
+                           const float color[4],
+                           ComPtr<IDCompositionSurface>& outSurface)
 {
     if (!d3d || !dcomp)
         return E_INVALIDARG;
@@ -239,8 +240,7 @@ HRESULT CreateSharedWashSurface(ID3D11Device* d3d,
         {
             ComPtr<ID3D11DeviceContext> ctx;
             d3d->GetImmediateContext(&ctx);
-            const float wash[4] = { 0.04f, 0.05f, 0.08f, 1.0f };
-            ctx->ClearRenderTargetView(rtv.Get(), wash);
+            ctx->ClearRenderTargetView(rtv.Get(), color);
         }
         bg->EndDraw();
     }
@@ -291,7 +291,10 @@ HRESULT Flip3DCompApp::InitComposition()
     rootBase->AddVisual(m_sceneVisual.Get(), FALSE, nullptr);
 
     if (m_d3dDevice)
-        CreateSharedWashSurface(m_d3dDevice.Get(), m_dcompDevice.Get(), m_washSurface);
+    {
+        const float wash[4] = { 0.04f, 0.05f, 0.08f, 1.0f };
+        CreateSolidSurface(m_d3dDevice.Get(), m_dcompDevice.Get(), wash, m_washSurface);
+    }
 
     return m_dcompDevice->Commit();
 }
@@ -563,7 +566,10 @@ bool Flip3DCompApp::RebuildMonitorBackdropsIfNeeded()
     DestroyMonitorBackdrops();
 
     if (!m_washSurface && m_d3dDevice && m_dcompDevice)
-        CreateSharedWashSurface(m_d3dDevice.Get(), m_dcompDevice.Get(), m_washSurface);
+    {
+        const float wash[4] = { 0.04f, 0.05f, 0.08f, 1.0f };
+        CreateSolidSurface(m_d3dDevice.Get(), m_dcompDevice.Get(), wash, m_washSurface);
+    }
 
     HWND shell = GetShellWindow();
     if (!m_dcompDevice || !m_rootVisual || !m_washSurface)
@@ -581,7 +587,12 @@ bool Flip3DCompApp::RebuildMonitorBackdropsIfNeeded()
                                           wallpaperSurface, wallpaperWidth,
                                           wallpaperHeight)))
     {
-        return false;
+        const float black[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        if (FAILED(CreateSolidSurface(m_d3dDevice.Get(), m_dcompDevice.Get(),
+                                      black, wallpaperSurface)))
+            return false;
+        wallpaperWidth = 1;
+        wallpaperHeight = 1;
     }
 
     RECT shellWnd = {};
@@ -792,10 +803,15 @@ bool Flip3DCompApp::RebuildMonitorBackdropsIfNeeded()
 // ============================================================================
 HRESULT Flip3DCompApp::CreateShellBackdrop()
 {
-    if (!RebuildMonitorBackdropsIfNeeded())
+    if (m_backdropReady || m_backdropBuildPending)
+        return S_OK;
+
+    m_backdropBuildPending = true;
+    if (!SetTimer(m_hwnd, kBuildShellBackdropTimerId, 0, nullptr))
     {
-        if (m_monitorBackdrops.empty())
-            return E_FAIL;
+        m_backdropBuildPending = false;
+        return HRESULT_FROM_WIN32(GetLastError());
     }
+
     return S_OK;
 }

@@ -57,6 +57,8 @@ enum class WallpaperPlacement
     Span,
 };
 
+inline constexpr UINT kBuildShellBackdropTimerId = 1;
+
 // ============================================================================
 // Flip3DCompApp — Main application class
 // ============================================================================
@@ -291,6 +293,8 @@ private:
     float                   m_viewY         = 0.0f;
     std::vector<MonitorBackdrop> m_monitorBackdrops;
     ComPtr<IDCompositionSurface> m_washSurface;
+    bool                    m_backdropBuildPending = false;
+    bool                    m_backdropReady = false;
     bool                    m_minimized     = false;
     bool                    m_rtl           = false;
     bool                    m_thumbnailsDirty = false; // coalesce WM 0x327 bursts
