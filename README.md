@@ -2,7 +2,7 @@
 Original version by: [ALTaleX531](https://github.com/ALTaleX531)
 
 
-DirectComposition Flip3D switcher. A faster, more complete successor to the [flip3d](https://github.com/ALTaleX531/flip3d) D3D11 prototype.
+DirectComposition Flip3D switcher. A faster, more complete successor to the original [flip3d](https://github.com/ALTaleX531/flip3d) D3D11 prototype.
 
 ## Requirements
 
