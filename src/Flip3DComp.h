@@ -47,6 +47,16 @@ using Microsoft::WRL::ComPtr;
 
 class Flip3DAccessible;
 
+enum class WallpaperPlacement
+{
+    Center,
+    Tile,
+    Stretch,
+    Fit,
+    Fill,
+    Span,
+};
+
 // ============================================================================
 // Flip3DCompApp — Main application class
 // ============================================================================
@@ -253,10 +263,21 @@ private:
     {
         RECT                        rcMonitor = {};
         RECT                        rcWork    = {};
+        RECT                        rcTaskbar = {};
         ComPtr<IDCompositionVisual3> washVisual;
         ComPtr<IDCompositionVisual3> shellContainer;
         ComPtr<IDCompositionVisual3> shellThumb;
         HTHUMBNAIL                  hShellThumb = nullptr;
+        ComPtr<IDCompositionVisual3> taskbarContainer;
+        ComPtr<IDCompositionVisual3> taskbarThumb;
+        HTHUMBNAIL                  hTaskbarThumb = nullptr;
+        ComPtr<IDCompositionVisual3> wallpaperVisual;
+        ComPtr<IDCompositionSurface> wallpaperSurface;
+        UINT                        wallpaperWidth = 0;
+        UINT                        wallpaperHeight = 0;
+        WallpaperPlacement          wallpaperPlacement = WallpaperPlacement::Stretch;
+        std::vector<ComPtr<IDCompositionVisual3>> wallpaperTiles;
+        std::vector<POINT>           wallpaperTileOrigins;
     };
 
     // ---- Dimensions ----

@@ -32,6 +32,7 @@ target_link_libraries(Flip3DComp
     d3d11         # DComp interop surface creation — no D3D rendering
     user32
     gdi32
+    windowscodecs
     advapi32
     oleacc
 )
