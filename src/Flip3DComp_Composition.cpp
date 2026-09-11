@@ -77,7 +77,7 @@ BOOL CALLBACK FindTaskbarProc(HWND hwnd, LPARAM lParam)
     if (!GetClassNameW(hwnd, className, ARRAYSIZE(className)))
         return TRUE;
 
-    const bool isTaskbar = !_wcsicmp(className, L"Shell_TrayWnd")   
+    const bool isTaskbar = !_wcsicmp(className, L"Shell_TrayWnd")       
                         || !_wcsicmp(className, L"Shell_SecondaryTrayWnd");
     if (isTaskbar && MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST) == ctx->monitor)
     {
@@ -792,10 +792,15 @@ bool Flip3DCompApp::RebuildMonitorBackdropsIfNeeded()
 // ============================================================================
 HRESULT Flip3DCompApp::CreateShellBackdrop()
 {
-    if (!RebuildMonitorBackdropsIfNeeded())
+    if (m_backdropReady || m_backdropBuildPending)
+        return S_OK;
+
+    m_backdropBuildPending = true;
+    if (!SetTimer(m_hwnd, kBuildShellBackdropTimerId, 0, nullptr))
     {
-        if (m_monitorBackdrops.empty())
-            return E_FAIL;
+        m_backdropBuildPending = false;
+        return HRESULT_FROM_WIN32(GetLastError());
     }
+
     return S_OK;
 }

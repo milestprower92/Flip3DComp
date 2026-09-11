@@ -141,6 +141,17 @@ LRESULT Flip3DCompApp::HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
+    case WM_TIMER:
+        if (wParam != kBuildShellBackdropTimerId)
+            break;
+
+        KillTimer(m_hwnd, kBuildShellBackdropTimerId);
+        m_backdropBuildPending = false;
+        m_backdropReady = RebuildMonitorBackdropsIfNeeded() || !m_monitorBackdrops.empty();
+        if (m_backdropReady)
+            UpdateBackdropLayout();
+        return 0;
+
     case WM_SIZE:
         if (wParam == SIZE_MINIMIZED)
         {
