@@ -33,7 +33,10 @@ using Matrix4x4 = D2D_MATRIX_4X4_F;
 // ============================================================================
 constexpr float  kEnterExitDurationSec     = 0.25f;    // uDWM binary: 0.25s
 constexpr float  kExitDurationSec          = 0.25f;    // uDWM: same timeline for exit + exit-rotate
-constexpr bool   kEnableAnimationEasing    = false;    // controls if Flip3D should use easing or not
+#ifndef FLIP3D_ENABLE_ANIMATION_EASING
+#define FLIP3D_ENABLE_ANIMATION_EASING 1
+#endif
+constexpr bool   kEnableAnimationEasing    = FLIP3D_ENABLE_ANIMATION_EASING != 0; // controls if Flip3D should use animation easing or not
 
 // Timeline easing: CSS cubic-bezier(0, 0, 0, 1) — fast start, soft landing
 constexpr float  kTimelineBezierX1 = 0.0f;
@@ -41,9 +44,9 @@ constexpr float  kTimelineBezierY1 = 0.0f;
 constexpr float  kTimelineBezierX2 = 0.0f;
 constexpr float  kTimelineBezierY2 = 1.0f;
 
-constexpr float  kScrollSmoothTimeSec      = 0.15f;    // smooth-scroll ease time constant
-constexpr float  kAnimationRate            = 1.0f;     // animation speed multiplier (1 = normal)
-constexpr float  kShiftAnimationRate       = 0.1f;     // Windows/DWM Shift slowdown (10x slower)
+constexpr float  kScrollSmoothTimeSec = 0.15f - (kEnableAnimationEasing ? 0.05f : 0.0f);    // smooth-scroll ease time constant, if animation easing is enabled, it will be 0.10f, so the scroll speed can be similar to the original uDWM Flip3D's non-eased animation
+constexpr float  kAnimationRate = 1.0f - (kEnableAnimationEasing ? 0.2f : 0.0f); // animation speed multiplier (1 = normal), if animation easing is enabled, it will be 0.8f, so the animation speed can be similar to the original uDWM Flip3D's non-eased animation
+constexpr float  kShiftAnimationRate = 0.1f - (kEnableAnimationEasing ? 0.05f : 0.0f); // shift animation speed multiplier, if animation easing is enabled, it will be 0.05f, so the shift animation speed can be similar to the original uDWM Flip3D's non-eased animation
 constexpr float  kScrollSettleEpsilon      = 0.002f;   // scrollPos≈scrollTarget threshold (browse
 constexpr float  kFrontCardExitSlot        = -0.5f;    // front card slot when exiting (fade-out)
 constexpr float  kFrontCardFadeSpeed       = 0.0f;     // front card fade speed (0 = instant, 1 = linear)
@@ -61,9 +64,7 @@ constexpr int    kMaxVisibleCards          = 10;       // max simultaneously vis
 constexpr int    kMaxCards                 = 24;       // absolute max cards in carousel
 
 enum class CardThumbnailQuality
-{
-Low,MediumLow,Medium,MediumHigh,High,
-};
+{Low,MediumLow,Medium,MediumHigh,High,};
 
 constexpr CardThumbnailQuality kCardThumbnailQuality = CardThumbnailQuality::Medium; // This controls the DWM thumbnail resolution used by 3D window cards. By default Windows Vista & 7 have it set to a Medium value (0.50f)
 
@@ -93,7 +94,7 @@ constexpr float CardThumbnailQualityScale()
     {
     case CardThumbnailQuality::Low:    return 0.10f;
     case CardThumbnailQuality::MediumLow:    return 0.25f;
-    case CardThumbnailQuality::Medium: return 0.50f;
+    case CardThumbnailQuality::Medium: return 0.55f;
     case CardThumbnailQuality::MediumHigh:    return 0.75f;
     case CardThumbnailQuality::High:   return 1.00f;
     }

@@ -4,7 +4,7 @@ project(Flip3DComp LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(Flip3DComp WIN32
+set(FLIP3D_SOURCES
     src/main.cpp
     src/Flip3DComp.cpp
     src/Flip3DComp_Window.cpp
@@ -20,19 +20,26 @@ add_executable(Flip3DComp WIN32
     src/Timeline.cpp
 )
 
-set_target_properties(Flip3DComp PROPERTIES
-    OUTPUT_NAME "Flip3D"
-)
+function(configure_flip3d_target target easing)
+    target_include_directories(${target} PRIVATE src)
+    target_compile_definitions(${target} PRIVATE
+        FLIP3D_ENABLE_ANIMATION_EASING=${easing}
+    )
+    target_link_libraries(${target}
+        dwmapi
+        dcomp
+        dxgi
+        d3d11         # DComp interop surface creation — no D3D rendering
+        user32
+        gdi32
+        windowscodecs
+        advapi32
+        oleacc
+    )
+endfunction()
 
-target_include_directories(Flip3DComp PRIVATE src)
-target_link_libraries(Flip3DComp
-    dwmapi
-    dcomp
-    dxgi
-    d3d11         # DComp interop surface creation — no D3D rendering
-    user32
-    gdi32
-    windowscodecs
-    advapi32
-    oleacc
-)
+add_executable(Flip3D WIN32 ${FLIP3D_SOURCES})
+configure_flip3d_target(Flip3D 0)
+
+add_executable(Flip3DComp WIN32 ${FLIP3D_SOURCES})
+configure_flip3d_target(Flip3DComp 1)
