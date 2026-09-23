@@ -85,12 +85,15 @@ void Flip3DCompApp::SelectWindow(HWND hwndTarget)
     }
     else if (!IsWindowEnabled(hwndTarget))
     {
-        SwitchToThisWindow(GetLastActivePopup(GetAncestor(hwndTarget, GA_ROOTOWNER)), TRUE);
+        SwitchToThisWindow(
+            GetLastActivePopup(GetAncestor(hwndTarget, GA_ROOTOWNER)), TRUE);
     }
     else
     {
         SwitchToThisWindow(hwndTarget, TRUE);
     }
+
+    EnsureTopmost();
 
     const int selIdx = FindCardIndex(hwndTarget);
     if (selIdx < 0)

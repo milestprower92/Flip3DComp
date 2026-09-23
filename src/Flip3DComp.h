@@ -90,6 +90,7 @@ private:
 
     bool CreateAppWindow();
     void    ApplyFullscreenLayout();
+    void    EnsureTopmost();
 
     // ========================================================================
     // DWM Thumbnail API (dwmapi.dll ordinals 147, 162)
@@ -122,6 +123,7 @@ private:
     // Shell Hook drives dynamic card add/remove (no ShowWindow on live windows).
     void    EnterFlip3DWindowMode();
     void    LeaveFlip3DWindowMode();
+    void    SetCardTransitionsDisabled(bool disabled);
     void    OnShellHookMessage(WPARAM wParam, LPARAM lParam);
     void    OnWindowShowHide(HWND hwnd);
 
