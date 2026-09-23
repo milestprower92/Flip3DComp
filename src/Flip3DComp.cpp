@@ -14,6 +14,18 @@
 #pragma comment(lib, "gdi32.lib")
 
 // ============================================================================
+// Flip3DCompApp::EnsureTopmost
+// ============================================================================
+void Flip3DCompApp::EnsureTopmost()
+{
+    if (!m_hwnd || !IsWindow(m_hwnd))
+        return;
+
+    SetWindowPos(m_hwnd, HWND_TOPMOST, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+}
+
+// ============================================================================
 // Flip3DCompApp::Initialize
 // ============================================================================
 bool Flip3DCompApp::Initialize(HINSTANCE hInstance)
@@ -96,6 +108,7 @@ int Flip3DCompApp::Run()
 
         if (!m_minimized)
         {
+            EnsureTopmost();
             auto now = std::chrono::steady_clock::now();
             float dt = std::chrono::duration<float>(now - m_prevFrame).count();
             m_prevFrame = now;

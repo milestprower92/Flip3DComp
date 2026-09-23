@@ -5,6 +5,18 @@
 
 #include <algorithm>
 
+namespace
+{
+  void SetWindowTransitionsDisabled(HWND hwnd, bool disabled) {
+    if (!hwnd || !IsWindow(hwnd))
+        return;
+
+    const BOOL value = disabled ? TRUE : FALSE;
+    DwmSetWindowAttribute(hwnd, DWMWA_TRANSITIONS_FORCEDISABLED,
+                          &value, sizeof(value));
+   }
+}
+
 // ============================================================================
 // Flip3DCompApp::QualifiesForView
 // ============================================================================
@@ -77,11 +89,19 @@ bool Flip3DCompApp::IsNeverHiddenWindow(HWND hwnd) const
         || !_wcsicmp(cls, L"WorkerW");
 }
 
+void Flip3DCompApp::SetCardTransitionsDisabled(bool disabled)
+{
+    for (const CardModel& card : m_cards)
+        SetWindowTransitionsDisabled(card.m_hwnd, disabled);
+}
+
 // ============================================================================
 void Flip3DCompApp::EnterFlip3DWindowMode()
 {
     if (!m_hwnd || m_shellHookRegistered)
         return;
+
+    SetCardTransitionsDisabled(true);
 
     if (!m_wmShellHook)
         m_wmShellHook = RegisterWindowMessageW(L"SHELLHOOK");
@@ -92,6 +112,8 @@ void Flip3DCompApp::EnterFlip3DWindowMode()
 
 void Flip3DCompApp::LeaveFlip3DWindowMode()
 {
+    SetCardTransitionsDisabled(false);
+
     if (m_hwnd && m_shellHookRegistered)
     {
         DeregisterShellHookWindow(m_hwnd);
@@ -235,6 +257,7 @@ bool Flip3DCompApp::AddCardForWindow(HWND hwnd)
         return false;
 
     m_cards.push_back(std::move(card));
+    SetWindowTransitionsDisabled(hwnd, true);
 
     if (m_dcompDevice)
         m_dcompDevice->Commit();
@@ -262,6 +285,8 @@ void Flip3DCompApp::RemoveCardAt(size_t index)
         DwmUnregisterThumbnail(card.m_hThumb);
         card.m_hThumb = nullptr;
     }
+
+    SetWindowTransitionsDisabled(card.m_hwnd, false);
 
     card.m_visual.Reset();
     card.m_containerVisual.Reset();
