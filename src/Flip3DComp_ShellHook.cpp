@@ -1,4 +1,4 @@
-        // ============================================================================
+// ============================================================================
 // Flip3DComp_ShellHook.cpp — dynamic card list via RegisterShellHookWindow
 // ============================================================================
 #include "Flip3DComp.h"
@@ -7,14 +7,14 @@
 
 namespace
 {
-  void SetWindowTransitionsDisabled(HWND hwnd, bool disabled) {
-    if (!hwnd || !IsWindow(hwnd))
-        return;
+    void SetWindowTransitionsDisabled(HWND hwnd, bool disabled) {
+        if (!hwnd || !IsWindow(hwnd))
+            return;
 
-    const BOOL value = disabled ? TRUE : FALSE;
-    DwmSetWindowAttribute(hwnd, DWMWA_TRANSITIONS_FORCEDISABLED,
-                          &value, sizeof(value));
-   }
+        const BOOL value = disabled ? TRUE : FALSE;
+        DwmSetWindowAttribute(hwnd, DWMWA_TRANSITIONS_FORCEDISABLED,
+            &value, sizeof(value));
+    }
 }
 
 // ============================================================================

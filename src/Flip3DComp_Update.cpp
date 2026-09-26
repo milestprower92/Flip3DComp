@@ -1035,8 +1035,9 @@ void Flip3DCompApp::UpdateCards(float enterProgress, float dtSeconds)
 // ============================================================================
 // Flip3DCompApp::ComputeCarouselEdgeOpacity
 // Continuous carousel edge roll-off used by the smooth-scroll path. Matches the
-// uDWM steady-state alpha: full inside, 0.5 at the back boundary, fading toward
-// the camera-side (slot < 0) as a card flies out the front.
+// uDWM steady-state alpha: full inside, fading toward the camera-side (slot < 0)
+// as a card flies out the front. With fewer cards, keep the last card more opaque
+// so a short carousel does not appear to dissolve at its back edge.
 // ============================================================================
 float Flip3DCompApp::ComputeCarouselEdgeOpacity(float slot) const
 {
@@ -1050,7 +1051,19 @@ float Flip3DCompApp::ComputeCarouselEdgeOpacity(float slot) const
     if (slot >= span)
         return 0.0f;
     if (slot >= span - 2.0f)
-        return (span - slot) / 2.0f;
+    {
+        const float countRange = (float)std::max(kMaxVisibleCards - 2, 1);
+        const float fewerCards = std::clamp(
+            (float)(kMaxVisibleCards - (int)m_cards.size()) / countRange,
+            0.0f, 1.0f);
+        const float lastCardOpacity = 0.5f + 0.5f * fewerCards;
+
+        if (slot >= span - 1.0f)
+            return lastCardOpacity * (span - slot);
+
+        return lastCardOpacity
+             + (1.0f - lastCardOpacity) * (span - 1.0f - slot);
+    }
     return 1.0f;
 }
 
